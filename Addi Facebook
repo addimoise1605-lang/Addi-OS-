@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Social Network</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f0f2f5; color: #1c1e21; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Barre de navigation */
+        header { background-color: #1877f2; color: white; width: 100%; padding: 12px 20px; font-size: 24px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+        
+        /* Conteneur principal */
+        main { width: 100%; max-width: 600px; margin: 20px 10px; }
+        
+        /* Formulaire de publication */
+        .create-post { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); margin-bottom: 20px; }
+        .create-post textarea { width: 100%; height: 80px; border: 1px solid #ddd; border-radius: 6px; padding: 10px; resize: none; font-size: 14px; outline: none; }
+        .create-post button { background-color: #1877f2; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; float: right; }
+        .create-post button:hover { background-color: #166fe5; }
+        
+        /* Fil d'actualité */
+        .post { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); margin-bottom: 15px; }
+        .post-header { font-weight: bold; margin-bottom: 5px; color: #050505; }
+        .post-time { font-size: 12px; color: #65676b; margin-bottom: 10px; }
+        .post-content { font-size: 15px; line-height: 1.4; margin-bottom: 15px; white-space: pre-wrap; }
+        .post-actions { border-top: 1px solid #e4e6eb; padding-top: 10px; display: flex; gap: 10px; }
+        .like-btn { background: #e4e6eb; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; color: #050505; }
+        .like-btn.liked { background-color: #e7f3ff; color: #1877f2; }
+    </style>
+</head>
+<body>
+
+    <header>MiniBook</header>
+
+    <main>
+        <!-- Zone de création -->
+        <section class="create-post">
+            <textarea id="postInput" placeholder="Que voulez-vous dire ?"></textarea>
+            <button onclick="addPost()">Publier</button>
+            <div style="clear: both;"></div>
+        </section>
+
+        <!-- Fil de publications -->
+        <section id="feed"></section>
+    </main>
+
+    <script>
+        // Charger les posts enregistrés ou initialiser un tableau vide
+        let posts = JSON.parse(localStorage.getItem('social_posts')) || [];
+
+        function saveAndRender() {
+            localStorage.setItem('social_posts', JSON.stringify(posts));
+            renderPosts();
+        }
+
+        function addPost() {
+            const input = document.getElementById('postInput');
+            const text = input.value.trim();
+            
+            if (text === '') return;
+
+            const newPost = {
+                id: Date.now(),
+                author: "Utilisateur",
+                date: new Date().toLocaleString('fr-FR'),
+                content: text,
+                likes: 0,
+                isLiked: false
+            };
+
+            posts.unshift(newPost);
+            input.value = '';
+            saveAndRender();
+        }
+
+        function toggleLike(id) {
+            posts = posts.map(post => {
+                if (post.id === id) {
+                    post.isLiked = !post.isLiked;
+                    post.likes += post.isLiked ? 1 : -1;
+                }
+                return post;
+            });
+            saveAndRender();
+        }
+
+        function renderPosts() {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+
+            posts.forEach(post => {
+                const postElement = document.createElement('article');
+                postElement.className = 'post';
+                postElement.innerHTML = `
+                    <div class="post-header">${post.author}</div>
+                    <div class="post-time">${post.date}</div>
+                    <div class="post-content">${post.content}</div>
+                    <div class="post-actions">
+                        <button class="like-btn ${post.isLiked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                            👍 J'aime (${post.likes})
+                        </button>
+                    </div>
+                `;
+                feed.appendChild(postElement);
+            });
+        }
+
+        // Affichage initial au chargement de la page
+        renderPosts();
+    </script>
+</body>
+</html>
